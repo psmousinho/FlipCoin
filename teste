@@ -1,0 +1,29 @@
+import requests
+import json
+
+class Protocolo():
+    
+    def mine(self):
+        requests.get('localhost:5000/mine')
+        resposta = requests.get_json()
+        print(resposta)
+
+    def nova_transacao(self):
+        remetente = input("Remetente: ")
+        destinatario = input("Destinatario: ")
+        quantia = float(input("Quantia: "))
+
+        transacao = {
+            'remetente' : remetente,
+            'destinatario' : destinatario,
+            'quantia' : quantia
+            }
+        # transacao = jsonify(transacao), 200
+        resposta = requests.get('localhost:5000/transaction/new', params=transacao)
+        print(resposta)
+
+
+    def visualizar_cadeia(self):
+        requests.get('localhost:5000/chain')
+        resposta =requests.get_json()
+        print(resposta)
