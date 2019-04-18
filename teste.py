@@ -4,9 +4,9 @@ import json
 class Protocolo():
     
     def mine(self):
-        requests.get('localhost:5000/mine')
-        resposta = requests.get_json()
-        print(resposta)
+        r = requests.get('http://localhost:5000/mine')
+        r = r.json()
+        print(r)
 
     def nova_transacao(self):
         remetente = input("Remetente: ")
@@ -19,11 +19,21 @@ class Protocolo():
             'quantia' : quantia
             }
         # transacao = jsonify(transacao), 200
-        resposta = requests.get('localhost:5000/transaction/new', params=transacao)
+        resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
         print(resposta)
 
 
     def visualizar_cadeia(self):
-        requests.get('localhost:5000/chain')
-        resposta =requests.get_json()
-        print(resposta)
+        r = requests.get('http://localhost:5000/chain')
+        r = r.json()
+        print(r)
+
+o = Protocolo()
+while(True):
+	i = input()
+	if i == '1':
+		o.mine()
+	elif i == '2':
+		o.nova_transacao()
+	elif i == '3':
+		o.visualizar_cadeia()
