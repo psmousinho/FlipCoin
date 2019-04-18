@@ -1,20 +1,35 @@
 import hashlib
 import json
+import requests
 
-from textwrap import dedent
+from urllib.parse import urlparse
 from time import time
 from uuid import uuid4
-
 from flask import Flask, jsonify, request
 
 class Blockchain(object):
+    
+
     def __init__(self):
+        """
+            cadeia: lista de blocos armazenados na blockchain.
+            transacoes_atuais: transacoes ainda nao foram adicionadas a um bloco.
+            nos: lista de urls conectados ao servidor.
+        """
         self.cadeia = []
         self.transacoes_atuais = []
-
+        self.nos = set()
+        # Iniciando a cadeia com um bloco raiz.
         self.novo_bloco(prova = 100, hash_ant = 1)
-
+       
+        
     def novo_bloco(self, prova, hash_ant = None):
+        """
+            Adiciona um novo bloco a cadeia.
+            :param prova: prova do trabalho.
+            :param hash_ant: hash do bloco anterior.
+            :return bloco recem criado.
+        """
         bloco = {
             'index' : len(self.cadeia) + 1,
             'timestamp' : time(),
@@ -28,6 +43,13 @@ class Blockchain(object):
         return bloco
 
     def nova_transacao(self, remetente, destinatario, quantia):
+        """
+            Adiciona uma transacao a lista de transacoes.
+            :param remetente: pessoa que enviou a quantia.
+            :param destinatario: pessoa recebendo a quantia.
+            :param quantia: quantia em questao.
+            :return index do bloco na qual essa transacao sera adicionada.
+        """
         self.transacoes_atuais.append({
             'remetente' : remetente, 
             'destinatario' : destinatario,
@@ -37,6 +59,9 @@ class Blockchain(object):
         return self.ultimo_bloco['index'] + 1
 
     def prova_trabalho(self, ult_prova):
+        """
+           Algoritmo de prova de trabalho.
+        """
         prova = 0
         
         while self.validar_prova(ult_prova, prova) is False:
@@ -60,6 +85,55 @@ class Blockchain(object):
         return hash_tentativa[:4] == "0000"
 
 
+    # Metodos de descentralizacao.
+    def registrar_no(self, endereco):
+        url_formatado = urlparse(endereco)
+        self.nos.add(url_formatado.netloc)
+
+    def validar_cadeia(self, cadeia):
+        ultimo_bloco = cadeia[0]
+        index_atual = 1
+
+        while index_atual < len(cadeia):
+            bloco = cadeia[bloco_atual]
+            print(f'{ultimo_bloco}')
+            print(f'{bloco}')
+            print("\n--------------\n")
+
+            if bloco['hash_ant'] != self.hash(ultimo_bloco):
+                return False
+
+            if not self.validar_prova(ultimo_bloco['prova'], bloco['prova']):
+                return False
+
+            ultimo_bloco = bloco
+            index_atual += 1
+
+        return True
+
+    def resolver_conflitos(sef):
+        vizinhos = self.nos
+        nova_cadeia = None
+
+        tam_max = len(self.cadeia)
+
+        for no in vizinhos:
+            resposta = requests.get(f'http://{no}/cadeia')
+
+            if resposta.status_code == 200:
+                tam = resposta.json()['length']
+                cadeia = resposta.json()['cadeia']
+
+                if tam > tam_max and self.validar_cadeia(cadeia):
+                   tam_max = tam
+                   nova_cadeia = cadeia
+
+        if nova_cadeia:
+            self.cadeia = nova_cadeia
+            return True
+
+        return False
+    
 #Flask:
 
 app = Flask(__name__)
@@ -112,6 +186,45 @@ def full_chain():
     }
     return jsonify(response), 200
 
+@app.route('/nos/registrar', methods = ['POST'])
+def registrar_nos():
+    valores = request.get_json()
+
+    nos = valores.get('nos')
+    if no is None:
+        return "Erro: forneça uma lista de nós válidas", 400
+
+    for no in nos:
+        blockchain.registrar_nos(no)
+
+    resposta = {
+          'menssagem' : 'Novos nós foram adicionados',
+          'total_nos' : list(blockchain.nos),
+          }
+
+    return jsonify(resposta), 201
+
+@app.route('/nos/resolver', methods=['GET'])
+def consensus():
+    
+    substituido = blockchain.resolver_conflitos()
+
+    if substituido:
+        resposta = {
+            'messagem' : 'Nossa cadeia foi substituída',
+            'nova_cadeia' : blockchain.cadeia,
+            }
+
+    else:
+        resposta = {
+            'menssagem': 'Nossa cadeia esta atualizada',
+            'cadeia': blockchain.chain
+        }
+
+    return jsonify(resposta), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+    
     
