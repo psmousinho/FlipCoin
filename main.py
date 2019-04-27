@@ -46,7 +46,7 @@ class Blockchain(object):
         """
             Adiciona uma transacao a lista de transacoes.
             :param remetente: pessoa que enviou a quantia.
-            :param destinatario: pessoa recebendo a quantia.
+            :param destinatario: pessoa recebendos a quantia.
             :param quantia: quantia em questao.
             :return index do bloco na qual essa transacao sera adicionada.
         """
@@ -225,6 +225,3 @@ def consensus():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
-    
-    
