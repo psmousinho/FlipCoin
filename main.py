@@ -8,7 +8,7 @@ from uuid import uuid4
 from flask import Flask, jsonify, request
 
 class Blockchain(object):
-    
+
 
     def __init__(self):
         """
@@ -37,7 +37,7 @@ class Blockchain(object):
             'prova' : prova,
             'hash_ant' : hash_ant or self.hash(self.cadeia[-1])
         }
-
+        print(bloco['index'])
         self.transacoes_atuais = []
         self.cadeia.append(bloco)
         return bloco
@@ -56,7 +56,7 @@ class Blockchain(object):
             'quantia' : quantia 
             })
         
-        return self.ultimo_bloco['index'] + 1
+        return int(self.ultimo_bloco['index'] + 1)
 
     def prova_trabalho(self, ult_prova):
         """
@@ -95,7 +95,7 @@ class Blockchain(object):
         index_atual = 1
 
         while index_atual < len(cadeia):
-            bloco = cadeia[bloco_atual]
+            bloco = cadeia[index_atual]
             print(f'{ultimo_bloco}')
             print(f'{bloco}')
             print("\n--------------\n")
@@ -170,12 +170,14 @@ def nova_transacao():
     valores = request.get_json()
 
     requerido = ['remetente', 'destinatario', 'quantia']
-    """if not all(k in valores for k in requerido):
-        return 'Faltando valores', 400"""
+    
+    #if not all(k in valores for k in requerido):
+    #    return 'Faltando valores', 400
 
-    index = blockchain.nova_transacao(valores['rementente'], valores['destinatario'], valores['quantia'])
+    index = blockchain.nova_transacao(valores['remetente'], valores['destinatario'], valores['quantia'])
 
-    resposta = {'messagem' : f'A transacao sera adicionada ao bloco {index}'}
+    resposta = {'messagem' : f'A transacao sera adicionada ao bloco 1'}
+    
     return jsonify(resposta), 201
 
 @app.route('/chain', methods=['GET'])
@@ -187,15 +189,15 @@ def full_chain():
     return jsonify(response), 200
 
 @app.route('/nos/registrar', methods = ['POST'])
-def registrar_nos():
+def registrar_no():
     valores = request.get_json()
 
     nos = valores.get('nos')
-    if no is None:
+    if nos is None:
         return "Erro: forneça uma lista de nós válidas", 400
 
     for no in nos:
-        blockchain.registrar_nos(no)
+        blockchain.registrar_no(no)
 
     resposta = {
           'menssagem' : 'Novos nós foram adicionados',
@@ -218,7 +220,7 @@ def consensus():
     else:
         resposta = {
             'menssagem': 'Nossa cadeia esta atualizada',
-            'cadeia': blockchain.chain
+            'cadeia': blockchain.cadeia
         }
 
     return jsonify(resposta), 200

@@ -1,0 +1,28 @@
+Servidor
+
+A função do servidor é manter um registro de todos os nós registrados
+na rede.
+
+O usuário deverá manter um arquivo com todos as suas etiquetas salvas e cálculo
+de quanto este usuário possui na carteira será feito utilizando os dados do
+blockchain.
+
+Funcionamento geral da carteira virtual:
+
+1. Um novo nó é criado e se registra na rede.
+2. Este nó realiza alguma transação.
+3. Esta transação é adicionada a lista de transações pendentes.
+4. Algum outro nó realiza uma mineração e então um novo bloco é criado
+   com as informações da transação pendente e adicionado na cadeia.
+5. A lista de transações pendente é resetada.
+
+Toda vez que uma nova carteira é criado um novo nó é adicionado a cadeia contendo
+as informações deste nó.
+
+Toda vez que um usuário fizer uma transação ou atualizar o histórico de transações
+o algoritmo de consenso dever ser chamado para resolver os conflitos.
+
+Objetivos:
+1. Desenvolver etiquetas.
+2. Modificar o método de enviar e receber etiquetas.
+3. Criar método de atualização de dados utilizando o arquivo salvo.

@@ -3,6 +3,14 @@ from functools import partial
 import json
 import requests
 
+def registrar():
+    nos = {
+        'nos' : ['http://localhost:5001/']
+    }
+
+    resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
+    print(resposta.text)
+
 def enviar(destinatarioE, quantiaE):
     remetente = "LocalHost"
     destinatario = destinatarioE.get()
@@ -13,13 +21,15 @@ def enviar(destinatarioE, quantiaE):
             'quantia' : quantia
     }
     resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
-    print(resposta)
+    print(resposta.text)
 
 def solicitar_pagamento():
     return 0
 
 janela = Tk()
 janela.title("FlipWallet")
+
+etiquetas = {}
 
 """ A distância entre os labels precisa ser
     no mínimo 30 pixels.
@@ -103,8 +113,11 @@ historio = Label(janela, text="Histórico de pagamentos:")
 line3 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
 line3.place(x = 10, y = 530)
 
-ultima_transacao = Label(janela, text="Última transação:")
-ultima_transacao.place(x = 10, y = 560)
+btnhistorico = Button(janela, text="Histórico")
+btnhistorico.place(x = 10, y = 560)
+
+btngerar_hash = Button(janela, text="gerar novo hash")
+btngerar_hash.place(x = 463, y = 560)
 
 janela.geometry("600x600+200+100")
 

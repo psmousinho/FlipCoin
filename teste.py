@@ -1,5 +1,6 @@
 import requests
 import json
+from flask import Flask, jsonify, request
 
 class Protocolo():
     
@@ -9,18 +10,17 @@ class Protocolo():
         print(r)
 
     def nova_transacao(self):
-        remetente = input("Remetente: ")
+        """remetente = input("Remetente: ")
         destinatario = input("Destinatario: ")
-        quantia = float(input("Quantia: "))
+        quantia = float(input("Quantia: "))"""
 
         transacao = {
-            'remetente' : remetente,
-            'destinatario' : destinatario,
-            'quantia' : quantia
+            'remetente' : "ahsdfkajshdflasjdflsdjf",
+            'destinatario' : "endereco",
+            'quantia' : 5
             }
-        # transacao = jsonify(transacao), 200
-        resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
-        print(resposta)
+        resposta = requests.post('http://localhost:5000/transaction/new', data = transacao)
+        print(resposta.text)
 
 
     def visualizar_cadeia(self):
