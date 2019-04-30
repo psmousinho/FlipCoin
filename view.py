@@ -2,34 +2,72 @@ from tkinter import *
 from functools import partial
 import json
 import requests
+import pickle
+import hashlib
 
-def registrar():
-    nos = {
-        'nos' : ['http://localhost:5001/']
-    }
+class Carteira:
+    def __init__(self):
+        self.hashs = {}
+        # self.cadeia = Blockchain()
 
-    resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
-    print(resposta.text)
+    def janelaNovoHash(hashs):
 
-def enviar(destinatarioE, quantiaE):
-    remetente = "LocalHost"
-    destinatario = destinatarioE.get()
-    quantia = float(quantiaE.get())
-    transacao = {
-            'remetente' : remetente,
-            'destinatario' : destinatario,
-            'quantia' : quantia
-    }
-    resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
-    print(resposta.text)
+        hash_windows = Tk()
+        hash_windows.title("Adicionar um novo hash")
+        
+        lbletiqueta = Label(hash_windows, text="Etiqueta:")
+        lbletiqueta.place(x = 10, y = 10)
+        
+        etiquetaE = Entry(hash_windows, width=64)
+        etiquetaE.place(x = 70, y = 10)
+        
+        lblnew_hash = Label(hash_windows, text="Hash criado:")
+        lblnew_hash.place(x = 10, y = 40)
 
-def solicitar_pagamento():
-    return 0
+        new_hash = hashlib.sha256()
 
+        lblhash_str = Label(hash_windows, text=new_hash.hexdigest())
+        lblhash_str.place(x = 100, y = 40)
+        
+        btnadicionarHash = Button(hash_windows, text="adicionar hash")
+        btnadicionarHash.place(x = 473, y = 70)
+        
+        hash_windows.geometry("600x100+200+100")
+        hash_windows.mainloop()
+
+    def adicionarNovoHash(etiqueta, hash):
+        if(etiqueta == ""):
+            return "Adiciona uma etiqueta ao hash"
+        else:
+
+    # Talvez não seja necessário
+    def registrar():
+        nos = {
+            'nos' : ['http://localhost:5001/']
+        }
+
+        resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
+        print(resposta.text)
+
+    def enviar(destinatarioE, quantiaE):
+        remetente = "LocalHost"
+        destinatario = destinatarioE.get()
+        quantia = float(quantiaE.get())
+        transacao = {
+                'remetente' : remetente,
+                'destinatario' : destinatario,
+                'quantia' : quantia
+        }
+        resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
+        print(resposta.text)
+
+    def solicitar_pagamento():
+        return 0
+
+########################################################################################
 janela = Tk()
 janela.title("FlipWallet")
-
-etiquetas = {}
+########################################################################################
 
 """ A distância entre os labels precisa ser
     no mínimo 30 pixels.
@@ -117,6 +155,7 @@ btnhistorico = Button(janela, text="Histórico")
 btnhistorico.place(x = 10, y = 560)
 
 btngerar_hash = Button(janela, text="gerar novo hash")
+btngerar_hash['command'] = partial(janelaNovoHash, hashs)
 btngerar_hash.place(x = 463, y = 560)
 
 janela.geometry("600x600+200+100")

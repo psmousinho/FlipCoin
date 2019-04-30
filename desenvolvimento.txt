@@ -1,11 +1,10 @@
 Servidor
 
-A função do servidor é manter um registro de todos os nós registrados
-na rede.
+A função do servidor é manter um registro de todas as transações
+realizadas na rede e todos nós registrados nela.
 
-O usuário deverá manter um arquivo com todos as suas etiquetas salvas e cálculo
-de quanto este usuário possui na carteira será feito utilizando os dados do
-blockchain.
+Cada usuário manterá um registro de todas as transações realizadas na rede
+além de todos os nós registrados nela.
 
 Funcionamento geral da carteira virtual:
 
@@ -26,3 +25,15 @@ Objetivos:
 1. Desenvolver etiquetas.
 2. Modificar o método de enviar e receber etiquetas.
 3. Criar método de atualização de dados utilizando o arquivo salvo.
+
+Classe carteira:
+    + Atributos:
+        hashs = dicionario
+        cadeia = blockchain
+    * Métodos:
+        sincronizar : obtém a cadeia
+        atualizar : atualiza a cadeia do usuário com a original e atualiza seus dados
+        registro : registra o usuário na rede (talvez não seja necessário)
+        enviar : envia uma quantidade de flipcon para outro usuário
+        receber : solicita um pagamento para outro usuário
+        gerar_hash: gera um novo hash para o usuário e o adiciona ao dicionário
