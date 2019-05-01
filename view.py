@@ -4,69 +4,107 @@ import json
 import requests
 import pickle
 import hashlib
+from tkinter import messagebox
+# from .blockchain import Blockchain
 
-class Carteira:
-    def __init__(self):
-        self.hashs = {}
-        # self.cadeia = Blockchain()
+def janelaNovoHash():
 
-    def janelaNovoHash(hashs):
+    hash_window = Tk()
+    hash_window.title("Adicionar um novo hash")
+    
+    lbletiqueta = Label(hash_window, text="Etiqueta:")
+    lbletiqueta.place(x = 10, y = 10)
+    
+    etiquetaE = Entry(hash_window, width=64)
+    etiquetaE.place(x = 70, y = 10)
+    
+    lblnew_hash = Label(hash_window, text="Hash criado:")
+    lblnew_hash.place(x = 10, y = 40)
 
-        hash_windows = Tk()
-        hash_windows.title("Adicionar um novo hash")
+    new_hash = hashlib.sha256()
+
+    lblhash_str = Label(hash_window, text=new_hash.hexdigest())
+    lblhash_str.place(x = 100, y = 40)
+    
+    btnadicionarHash = Button(hash_window, text="adicionar hash")
+    btnadicionarHash['command'] = partial(adicionarNovoHash, hash_window, etiquetaE, new_hash)
+    btnadicionarHash.place(x = 473, y = 70)
+    
+    hash_window.geometry("600x100+200+100")
+    hash_window.mainloop()
+
+def adicionarNovoHash(hash_window,etiqueta, hash):
+    if etiqueta.get() == '':
+        messagebox.showerror("Erro", "A etiqueta está vazia!")
+    else:
+        minhas_etiquetas[etiqueta] = hash
+        hash_window.destroy()
+
+def adicionarNovoHash(etiqueta, hash):
+    minhas_etiquetas[etiqueta] = hash
+
+# Talvez não seja necessário
+def registrar():
+    nos = {
+        'nos' : ['http://localhost:5001/']
+    }
+
+    resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
+    print(resposta.text)
+
+def enviar(destinatarioE, etiquetaE, quantiaE):
+    destinatario = None
+
+    if etiquetaE.get() != '':
         
-        lbletiqueta = Label(hash_windows, text="Etiqueta:")
-        lbletiqueta.place(x = 10, y = 10)
-        
-        etiquetaE = Entry(hash_windows, width=64)
-        etiquetaE.place(x = 70, y = 10)
-        
-        lblnew_hash = Label(hash_windows, text="Hash criado:")
-        lblnew_hash.place(x = 10, y = 40)
+        if destinatarioE.get() != '':
 
-        new_hash = hashlib.sha256()
-
-        lblhash_str = Label(hash_windows, text=new_hash.hexdigest())
-        lblhash_str.place(x = 100, y = 40)
-        
-        btnadicionarHash = Button(hash_windows, text="adicionar hash")
-        btnadicionarHash.place(x = 473, y = 70)
-        
-        hash_windows.geometry("600x100+200+100")
-        hash_windows.mainloop()
-
-    def adicionarNovoHash(etiqueta, hash):
-        if(etiqueta == ""):
-            return "Adiciona uma etiqueta ao hash"
+            if etiquetaE.get() in etiquetas_contatos:
+                destinatario = etiquetas_contatos[etiquetaE.get()]
+            
+            else:
+                etiquetas_contatos[etiquetaE.get()] = destinatarioE.get()
+                destinatario = destinatarioE
         else:
+            
+            if etiquetaE.get() in etiquetas_contatos:
+                destinatario = etiquetas_contatos[etiquetaE.get()]
+            
+            else:
+                messagebox.showerror("Erro", "Não existe nenhum endereço com esta etiqueta!")
+                return
+    else:
+        if destinatarioE.get() == '':
+            messagebox.showerror("Erro", "Especifique um endereço!")
+            return
+        else:
+            destinatario = destinatarioE.get()
+    
+    if quantiaE.get() == '':
+        messagebox.showerror("Erro", "Especifique a quantia a ser enviada!")
+        return
 
-    # Talvez não seja necessário
-    def registrar():
-        nos = {
-            'nos' : ['http://localhost:5001/']
-        }
+    remetente = "LocalHost"
+    quantia = float(quantiaE.get())
+    transacao = {
+            'remetente' : remetente,
+            'destinatario' : destinatario,
+            'quantia' : quantia
+    }
+    resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
+    print(resposta.text)
 
-        resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
-        print(resposta.text)
-
-    def enviar(destinatarioE, quantiaE):
-        remetente = "LocalHost"
-        destinatario = destinatarioE.get()
-        quantia = float(quantiaE.get())
-        transacao = {
-                'remetente' : remetente,
-                'destinatario' : destinatario,
-                'quantia' : quantia
-        }
-        resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
-        print(resposta.text)
-
-    def solicitar_pagamento():
-        return 0
+def solicitar_pagamento():
+    return 0
 
 ########################################################################################
 janela = Tk()
 janela.title("FlipWallet")
+
+minhas_etiquetas = {}
+etiquetas_contatos = {}
+
+# cadeia = Blockchain()
 ########################################################################################
 
 """ A distância entre os labels precisa ser
@@ -116,7 +154,7 @@ comissaoE = Entry(janela, width=53)
 comissaoE.place(x = 160, y = 290)
 
 btnenviar = Button(janela, width=3, text="Enviar")
-btnenviar["command"] = partial(enviar, destinatarioE, quantiaE)
+btnenviar['command'] = partial(enviar, destinatarioE, etiquetaE, quantiaE)
 btnenviar.place(x = 537, y = 320)
 
 line2 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
@@ -155,7 +193,7 @@ btnhistorico = Button(janela, text="Histórico")
 btnhistorico.place(x = 10, y = 560)
 
 btngerar_hash = Button(janela, text="gerar novo hash")
-btngerar_hash['command'] = partial(janelaNovoHash, hashs)
+btngerar_hash['command'] = partial(janelaNovoHash)
 btngerar_hash.place(x = 463, y = 560)
 
 janela.geometry("600x600+200+100")

@@ -36,4 +36,9 @@ Classe carteira:
         registro : registra o usuário na rede (talvez não seja necessário)
         enviar : envia uma quantidade de flipcon para outro usuário
         receber : solicita um pagamento para outro usuário
-        gerar_hash: gera um novo hash para o usuário e o adiciona ao dicionário
+        gerar_hash: gera um novo hash para o usuário e o adiciona ao dicionário                         X
+
+hash preenchido x etiqueta preenchida --> Salvar o hash com esta etiqueta na lista
+hash preenchido x etiqueta vazia --> Não fazer nada
+hash vazio x etiqueta preenchida --> Verificar se a etiqueta está na lista
+hash vazio x etiquat vazia --> mensagem de erro
