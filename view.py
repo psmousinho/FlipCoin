@@ -59,16 +59,16 @@ def enviar(destinatarioE, etiquetaE, quantiaE):
         
         if destinatarioE.get() != '':
 
-            if etiquetaE.get() in etiquetas_contatos:
-                destinatario = etiquetas_contatos[etiquetaE.get()]
+            if etiquetaE.get() in contatos:
+                destinatario = contatos[etiquetaE.get()]
             
             else:
-                etiquetas_contatos[etiquetaE.get()] = destinatarioE.get()
+                contatos[etiquetaE.get()] = destinatarioE.get()
                 destinatario = destinatarioE
         else:
             
-            if etiquetaE.get() in etiquetas_contatos:
-                destinatario = etiquetas_contatos[etiquetaE.get()]
+            if etiquetaE.get() in contatos:
+                destinatario = contatos[etiquetaE.get()]
             
             else:
                 messagebox.showerror("Erro", "Não existe nenhum endereço com esta etiqueta!")
@@ -94,15 +94,12 @@ def enviar(destinatarioE, etiquetaE, quantiaE):
     resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
     print(resposta.text)
 
-def solicitar_pagamento():
-    return 0
-
 ########################################################################################
 janela = Tk()
 janela.title("FlipWallet")
 
 minhas_etiquetas = {}
-etiquetas_contatos = {}
+contatos = {}
 
 # cadeia = Blockchain()
 ########################################################################################
@@ -160,14 +157,14 @@ btnenviar.place(x = 537, y = 320)
 line2 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
 line2.place(x = 10, y = 350)
 
-receber = Label(janela, text="Receber")
+receber = Label(janela, text="Solicitar pagamento")
 receber.place(x = 10, y = 380)
 
-etiqueta_receber = Label(janela, text="Etiqueta:")
-etiqueta_receber.place(x = 10, y = 410)
+destinatario_receber = Label(janela, text="Destinatario:")
+destinatario_receber.place(x = 10, y = 410)
 
-etiquetaR = Entry(width=61)
-etiquetaR.place(x = 95, y = 410)
+destinatarioR = Entry(width=61)
+destinatarioR.place(x = 95, y = 410)
 
 quantia_receber = Label(janela, text="Quantia: $FC")
 quantia_receber.place(x = 10, y = 440)
@@ -181,10 +178,9 @@ mensagem.place(x = 10, y = 470)
 mensagemR = Entry(width=61)
 mensagemR.place(x = 95, y = 470)
 
-btnreceber = Button(janela, width=13, text="solicitar pagamento", command=solicitar_pagamento)
+btnreceber = Button(janela, width=13, text="solicitar pagamento")
+#btnreceber['command'] = partial(solicitar_pagamento, destinatarioR, quantiaR, mensagemR)
 btnreceber.place(x = 456, y = 500)
-
-historio = Label(janela, text="Histórico de pagamentos:")
 
 line3 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
 line3.place(x = 10, y = 530)
