@@ -15,8 +15,8 @@ class Protocolo():
         quantia = float(input("Quantia: "))"""
 
         transacao = {
-            'remetente' : "ahsdfkajshdflasjdflsdjf",
-            'destinatario' : "endereco",
+            'remetente' : "localhost",
+            'destinatario' : "",
             'quantia' : 5
             }
         resposta = requests.post('http://localhost:5000/transaction/new', data = transacao)

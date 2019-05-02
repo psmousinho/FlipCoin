@@ -5,193 +5,261 @@ import requests
 import pickle
 import hashlib
 from tkinter import messagebox
-# from .blockchain import Blockchain
+from blockchain import Blockchain
 
-def janelaNovoHash():
+class FlipWallter:
+    def __init__(self, master=None):
+        self.janela = Tk()
+        self.minhas_etiquetas = {}
+        self.contatos = {}
+        self.blockchain = Blockchain()
 
-    hash_window = Tk()
-    hash_window.title("Adicionar um novo hash")
-    
-    lbletiqueta = Label(hash_window, text="Etiqueta:")
-    lbletiqueta.place(x = 10, y = 10)
-    
-    etiquetaE = Entry(hash_window, width=64)
-    etiquetaE.place(x = 70, y = 10)
-    
-    lblnew_hash = Label(hash_window, text="Hash criado:")
-    lblnew_hash.place(x = 10, y = 40)
-
-    new_hash = hashlib.sha256()
-
-    lblhash_str = Label(hash_window, text=new_hash.hexdigest())
-    lblhash_str.place(x = 100, y = 40)
-    
-    btnadicionarHash = Button(hash_window, text="adicionar hash")
-    btnadicionarHash['command'] = partial(adicionarNovoHash, hash_window, etiquetaE, new_hash)
-    btnadicionarHash.place(x = 473, y = 70)
-    
-    hash_window.geometry("600x100+200+100")
-    hash_window.mainloop()
-
-def adicionarNovoHash(hash_window,etiqueta, hash):
-    if etiqueta.get() == '':
-        messagebox.showerror("Erro", "A etiqueta está vazia!")
-    else:
-        minhas_etiquetas[etiqueta] = hash
-        hash_window.destroy()
-
-def adicionarNovoHash(etiqueta, hash):
-    minhas_etiquetas[etiqueta] = hash
-
-# Talvez não seja necessário
-def registrar():
-    nos = {
-        'nos' : ['http://localhost:5001/']
-    }
-
-    resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
-    print(resposta.text)
-
-def enviar(destinatarioE, etiquetaE, quantiaE):
-    destinatario = None
-
-    if etiquetaE.get() != '':
+        def sincronizar():
+            r = requests.get('http://localhost:5000/chain')
+            r = r.json()
+            self.blockchain.cadeia = r['cadeia']
+            self.blockchain.transacoes_atuais = r['transacoes_atuais']
         
-        if destinatarioE.get() != '':
+        def atualizarSaldoDisponivel():
+            saldo_disponivel = 0
+            
+            for bloco in self.blockchain.cadeia:
+                for transacao in bloco:
+                    for etiqueta in self.minhas_etiquetas:
+                        if transacao['destinatario'] == self.minhas_etiquetas[etiqueta]:
+                            saldo_disponivel += transacao['quantia']
+            
+            return saldo_disponivel
+        
+        def atualizarSaldoPendente():
+            saldo_pendente = 0
 
-            if etiquetaE.get() in contatos:
-                destinatario = contatos[etiquetaE.get()]
+            for transacao in self.blockchain.transacoes_atuais:
+                for etiqueta in self.minhas_etiquetas:
+                    if transacao['destinatario'] == self.minhas_etiquetas[etiqueta]:
+                        saldo_pendente += transacao['quantia']
             
+            return saldo_pendente
+        
+        def atualizar_saldos(lblSaldoDisponivel, lblSaldoPendente, lblSaldoTotal):
+            saldo_disponivel = 0
+            
+            for bloco in self.blockchain.cadeia:
+                for transacao in bloco:
+                    for etiqueta in self.minhas_etiquetas:
+                        if transacao['destinatario'] == self.minhas_etiquetas[etiqueta]:
+                            saldo_disponivel += transacao['quantia']
+            
+            lblSaldoDisponivel['text'] = "$FC " + str(saldo_disponivel)
+
+            saldo_pendente = 0
+
+            for transacao in self.blockchain.transacoes_atuais:
+                for etiqueta in self.minhas_etiquetas:
+                    if transacao['destinatario'] == self.minhas_etiquetas[etiqueta]:
+                        saldo_pendente += transacao['quantia']
+            
+            lblSaldoPendente['text'] = "$FC " + str(saldo_pendente)
+
+            lblSaldoTotal['text'] = "$FC " + str(saldo_disponivel + saldo_pendente) 
+
+
+        def janelaNovoHash():
+            hash_window = Tk()
+            hash_window.title("Adicionar um novo hash")
+            
+            lbletiqueta = Label(hash_window, text="Etiqueta:")
+            lbletiqueta.place(x = 10, y = 10)
+            
+            etiquetaE = Entry(hash_window, width=64)
+            etiquetaE.place(x = 70, y = 10)
+            
+            lblnew_hash = Label(hash_window, text="Hash criado:")
+            lblnew_hash.place(x = 10, y = 40)
+
+            new_hash = hashlib.sha256()
+
+            lblhash_str = Label(hash_window, text=new_hash.hexdigest())
+            lblhash_str.place(x = 100, y = 40)
+            
+            btnadicionarHash = Button(hash_window, text="adicionar hash")
+            btnadicionarHash['command'] = partial(adicionarNovoHash, hash_window, etiquetaE, new_hash)
+            btnadicionarHash.place(x = 473, y = 70)
+            
+            hash_window.geometry("600x100+200+100")
+            hash_window.mainloop()
+
+        def adicionarNovoHash(hash_window,etiqueta, hash):
+            if etiqueta.get() == '':
+                messagebox.showerror("Erro", "A etiqueta está vazia!")
             else:
-                contatos[etiquetaE.get()] = destinatarioE.get()
-                destinatario = destinatarioE
-        else:
-            
-            if etiquetaE.get() in contatos:
-                destinatario = contatos[etiquetaE.get()]
-            
+                self.minhas_etiquetas[etiqueta] = hash
+                hash_window.destroy()
+       
+        #def adicionarNovoHash(etiqueta, hash):
+        #    self.minhas_etiquetas[etiqueta] = hash
+
+        def registrar():
+            nos = {
+                'nos' : ['http://localhost:5001/']
+            }
+
+            resposta = requests.post('http://localhost:5000/nos/registrar', params = nos)
+            print(resposta.text)
+
+        def enviar(destinatarioE, etiquetaE, quantiaE):
+            destinatario = None
+
+            if etiquetaE.get() != '':
+                
+                if destinatarioE.get() != '':
+
+                    if etiquetaE.get() in self.contatos:
+                        destinatario = self.contatos[etiquetaE.get()]
+                    
+                    else:
+                        self.contatos[etiquetaE.get()] = destinatarioE.get()
+                        destinatario = destinatarioE
+                else:
+                    
+                    if etiquetaE.get() in self.contatos:
+                        destinatario = self.contatos[etiquetaE.get()]
+                    
+                    else:
+                        messagebox.showerror("Erro", "Não existe nenhum endereço com esta etiqueta!")
+                        return
             else:
-                messagebox.showerror("Erro", "Não existe nenhum endereço com esta etiqueta!")
+                if destinatarioE.get() == '':
+                    messagebox.showerror("Erro", "Especifique um endereço!")
+                    return
+                else:
+                    destinatario = destinatarioE.get()
+            
+            if quantiaE.get() == '':
+                messagebox.showerror("Erro", "Especifique a quantia a ser enviada!")
                 return
-    else:
-        if destinatarioE.get() == '':
-            messagebox.showerror("Erro", "Especifique um endereço!")
-            return
-        else:
-            destinatario = destinatarioE.get()
-    
-    if quantiaE.get() == '':
-        messagebox.showerror("Erro", "Especifique a quantia a ser enviada!")
-        return
 
-    remetente = "LocalHost"
-    quantia = float(quantiaE.get())
-    transacao = {
-            'remetente' : remetente,
-            'destinatario' : destinatario,
-            'quantia' : quantia
-    }
-    resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
-    print(resposta.text)
+            remetente = "LocalHost"
+            quantia = float(quantiaE.get())
+            transacao = {
+                    'remetente' : remetente,
+                    'destinatario' : destinatario,
+                    'quantia' : quantia
+            }
+            resposta = requests.get('http://localhost:5000/transaction/new', params=transacao)
+            print(resposta.text)
 
-########################################################################################
-janela = Tk()
-janela.title("FlipWallet")
+        def janelaHistorico():
+            janelaHistorico = Tk()
+            janelaHistorico.title("Histórico de transações")
 
-minhas_etiquetas = {}
-contatos = {}
+            scrollbar = Scrollbar(janelaHistorico)
+            scrollbar.pack(side = RIGHT, fill = Y)
 
-# cadeia = Blockchain()
-########################################################################################
+            lista_transacoes = Listbox(janelaHistorico, width=73, height=30)
+            lista_transacoes.place(x = 0, y = 0)
 
-""" A distância entre os labels precisa ser
-    no mínimo 30 pixels.
-"""
+            lista_transacoes.insert(END, "DATA           REMETENTE             DESTINATÁRIO         QUANTIA")
 
-saldo = Label(janela, text="Saldos")
-saldo.place(x = 10, y = 20)
+            for i in range(200):
+                lista_transacoes.insert(END, i)
 
-disponivel = Label(janela, text="Disponível: ")
-disponivel.place(x = 10, y = 50)
+            """
+            for bloco in self.blockchain.cadeia:
+                data = bloco['timestamp']
+                transacoes = bloco.get('transacoes')
+                remetente = transacoes[1]
+                destinatario = bloco['transacoes']['destinatario']
+                quantia = bloco['transacoes']['quantia']
+                string = data + " " + remetente + " " + destinatario + " " + quantia
+            
+                lista_transacoes.insert(END, )
+            """
 
-pendente = Label(janela, text="Pendente: ")
-pendente.place(x = 10, y = 80)
+            lista_transacoes.config(yscrollcommand=scrollbar.set)
+            scrollbar.config(command=lista_transacoes.yview)
 
-total = Label(janela, text="Total: ")
-total.place(x = 10, y = 110)
+            janelaHistorico.resizable(0,0)
+            janelaHistorico.geometry("600x450+200+100")
+            janelaHistorico.mainloop()
 
-line1 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
-line1.place(x = 10, y = 140)
+        sincronizar()
 
-lblenviar = Label(janela, text="Enviar")
-lblenviar.place(x = 10, y = 170)
+        saldo = Label(self.janela, text="Saldos")
+        saldo.place(x = 10, y = 20)
 
-destinatario = Label(janela, text="Destinatário: ")
-destinatario.place(x = 10, y = 200)
+        disponivel = Label(self.janela, text="Disponível: ")
+        disponivel.place(x = 10, y = 50)
 
-destinatarioE = Entry(janela, width=53)
-destinatarioE.place(x = 160, y = 200)
+        saldo_disponivel = Label(self.janela)
+        saldo_disponivel.place(x = 550, y = 50)
 
-etiqueta_enviar = Label(janela, text="Etiqueta: ")
-etiqueta_enviar.place(x = 10, y = 230)
+        pendente = Label(self.janela, text="Pendente: ")
+        pendente.place(x = 10, y = 80)
 
-etiquetaE = Entry(janela, width=53)
-etiquetaE.place(x = 160, y = 230)
+        saldo_pendente = Label(self.janela)
+        saldo_pendente.place(x = 550, y = 80)
 
-quantia_enviar = Label(janela, text="Quantia: $FC")
-quantia_enviar.place(x = 10, y = 260)
+        total = Label(self.janela, text="Total: ")
+        total.place(x = 10, y = 110)
 
-quantiaE = Entry(janela, width=53)
-quantiaE.place(x = 160, y = 260)
+        saldo_total = Label(self.janela)
+        saldo_total.place(x = 550, y = 110)
 
-comissao = Label(janela, text="Comissão da transação: ")
-comissao.place(x = 10, y = 290)
+        atualizarSaldos = Button(self.janela, text="Atualizar saldos")
+        atualizarSaldos['command'] = partial(atualizar_saldos, saldo_disponivel, saldo_pendente, saldo_total)
+        atualizarSaldos.place(x = 468, y = 140)
 
-comissaoE = Entry(janela, width=53)
-comissaoE.place(x = 160, y = 290)
+        atualizar_saldos(saldo_disponivel, saldo_pendente, saldo_total)
 
-btnenviar = Button(janela, width=3, text="Enviar")
-btnenviar['command'] = partial(enviar, destinatarioE, etiquetaE, quantiaE)
-btnenviar.place(x = 537, y = 320)
+        line1 = Label(self.janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
+        line1.place(x = 10, y = 170)
 
-line2 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
-line2.place(x = 10, y = 350)
+        lblenviar = Label(self.janela, text="Enviar")
+        lblenviar.place(x = 10, y = 200)
 
-receber = Label(janela, text="Solicitar pagamento")
-receber.place(x = 10, y = 380)
+        destinatario = Label(self.janela, text="Destinatário: ")
+        destinatario.place(x = 10, y = 230)
 
-destinatario_receber = Label(janela, text="Destinatario:")
-destinatario_receber.place(x = 10, y = 410)
+        destinatarioE = Entry(self.janela, width=53)
+        destinatarioE.place(x = 160, y = 230)
 
-destinatarioR = Entry(width=61)
-destinatarioR.place(x = 95, y = 410)
+        etiqueta_enviar = Label(self.janela, text="Etiqueta: ")
+        etiqueta_enviar.place(x = 10, y = 260)
 
-quantia_receber = Label(janela, text="Quantia: $FC")
-quantia_receber.place(x = 10, y = 440)
+        etiquetaE = Entry(self.janela, width=53)
+        etiquetaE.place(x = 160, y = 260)
 
-quantiaR = Entry(width=61)
-quantiaR.place(x = 95, y = 440)
+        quantia_enviar = Label(self.janela, text="Quantia: $FC")
+        quantia_enviar.place(x = 10, y = 290)
 
-mensagem = Label(janela, text="Mensagem:")
-mensagem.place(x = 10, y = 470)
+        quantiaE = Entry(self.janela, width=53)
+        quantiaE.place(x = 160, y = 290)
 
-mensagemR = Entry(width=61)
-mensagemR.place(x = 95, y = 470)
+        comissao = Label(self.janela, text="Comissão da transação: ")
+        comissao.place(x = 10, y = 320)
 
-btnreceber = Button(janela, width=13, text="solicitar pagamento")
-#btnreceber['command'] = partial(solicitar_pagamento, destinatarioR, quantiaR, mensagemR)
-btnreceber.place(x = 456, y = 500)
+        comissaoE = Entry(self.janela, width=53)
+        comissaoE.place(x = 160, y = 320)
 
-line3 = Label(janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
-line3.place(x = 10, y = 530)
+        btnenviar = Button(self.janela, width=3, text="Enviar")
+        btnenviar['command'] = partial(enviar,destinatarioE, etiquetaE, quantiaE)
+        btnenviar.place(x = 537, y = 350)
 
-btnhistorico = Button(janela, text="Histórico")
-btnhistorico.place(x = 10, y = 560)
+        line2 = Label(self.janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
+        line2.place(x = 10, y = 380)
 
-btngerar_hash = Button(janela, text="gerar novo hash")
-btngerar_hash['command'] = partial(janelaNovoHash)
-btngerar_hash.place(x = 463, y = 560)
+        btnHistorico = Button(self.janela, text="Histórico")
+        btnHistorico['command'] = partial(janelaHistorico)
+        btnHistorico.place(x = 10, y = 410)
 
-janela.geometry("600x600+200+100")
+        btngerar_hash = Button(self.janela, text="gerar novo hash")
+        btngerar_hash['command'] = partial(janelaNovoHash)
+        btngerar_hash.place(x = 463, y = 410)
 
-janela.mainloop()
+        self.janela.title("FlipWallet")
+        self.janela.geometry("600x450+200+100")
+        self.janela.resizable(0,0)  
+        self.janela.mainloop()
+
+FlipWallter()

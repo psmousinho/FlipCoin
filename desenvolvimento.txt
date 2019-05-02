@@ -31,14 +31,9 @@ Classe carteira:
         hashs = dicionario
         cadeia = blockchain
     * Métodos:
-        sincronizar : obtém a cadeia
+        sincronizar : obtém a cadeia                                                                                   X
         atualizar : atualiza a cadeia do usuário com a original e atualiza seus dados
-        registro : registra o usuário na rede (talvez não seja necessário)
-        enviar : envia uma quantidade de flipcon para outro usuário
-        receber : solicita um pagamento para outro usuário
-        gerar_hash: gera um novo hash para o usuário e o adiciona ao dicionário                         X
-
-hash preenchido x etiqueta preenchida --> Salvar o hash com esta etiqueta na lista
-hash preenchido x etiqueta vazia --> Não fazer nada
-hash vazio x etiqueta preenchida --> Verificar se a etiqueta está na lista
-hash vazio x etiquat vazia --> mensagem de erro
+        registro : registra o usuário na rede                                               (talvez não seja necessário)
+        enviar : envia uma quantidade de flipcon para outro usuário                                                    X
+        receber : solicita um pagamento para outro usuário                                                (descotinuado)
+        gerar_hash: gera um novo hash para o usuário e o adiciona ao dicionário                                        X
