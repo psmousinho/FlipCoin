@@ -9,7 +9,6 @@ from flask import Flask, jsonify, request
 
 class Blockchain(object):
 
-
     def __init__(self):
         """
             cadeia: lista de blocos armazenados na blockchain.
@@ -21,8 +20,7 @@ class Blockchain(object):
         self.nos = set()
         # Iniciando a cadeia com um bloco raiz.
         self.novo_bloco(prova = 100, hash_ant = 1)
-       
-        
+           
     def novo_bloco(self, prova, hash_ant = None):
         """
             Adiciona um novo bloco a cadeia.
@@ -111,7 +109,7 @@ class Blockchain(object):
 
         return True
 
-    def resolver_conflitos(sef):
+    def resolver_conflitos(self):
         vizinhos = self.nos
         nova_cadeia = None
 
@@ -134,8 +132,8 @@ class Blockchain(object):
 
         return False
     
-#Flask:
 
+#Flask:
 app = Flask(__name__)
 
 node_identifier = str(uuid4()).replace('-', '')
@@ -144,13 +142,15 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['GET'])
 def mine():
+    no = request.form('endereco')
+
     ult_bloco = blockchain.ultimo_bloco
     ult_prova = ult_bloco['prova']
     prova = blockchain.prova_trabalho(ult_prova)
 
     blockchain.nova_transacao(
         remetente = "0",
-        destinatario = node_identifier,
+        destinatario = no,
         quantia = 1)
 
     hash_ant = blockchain.hash(ult_bloco)
@@ -167,16 +167,18 @@ def mine():
 
 @app.route('/transaction/new', methods=['POST'])
 def nova_transacao():
-    valores = request.get_json()
-
-    requerido = ['remetente', 'destinatario', 'quantia']
+    try:
+        remetente = request.form['remetente']
+        destinatario = request.form['destinatario']
+        quantia = request.form['quantia']
+        index = blockchain.nova_transacao(remetente, destinatario, quantia)
+        resposta = {'messagem' : f'A transacao sera adicionada ao bloco {index}'}
+    
+    except KeyError:
+        resposta = {'messagem' : 'Deu errado'}
     
     #if not all(k in valores for k in requerido):
-    #    return 'Faltando valores', 400
-
-    index = blockchain.nova_transacao(valores['remetente'], valores['destinatario'], valores['quantia'])
-
-    resposta = {'messagem' : f'A transacao sera adicionada ao bloco 1'}
+    #    return 'Faltando valores', 40
     
     return jsonify(resposta), 201
 
@@ -190,9 +192,7 @@ def full_chain():
 
 @app.route('/nos/registrar', methods = ['POST'])
 def registrar_no():
-    valores = request.get_json()
-
-    nos = valores.get('nos')
+    nos = request.form('nos')
     if nos is None:
         return "Erro: forneça uma lista de nós válidas", 400
 
@@ -224,6 +224,7 @@ def consensus():
         }
 
     return jsonify(resposta), 200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
