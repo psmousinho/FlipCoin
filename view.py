@@ -15,7 +15,7 @@ class User:
         self.contatos = {}
         self.saldo_disponivel = 0
         self.saldo_pendente = 0
-        self.transacoes = []
+        self.transacoes = {}
         self.index_atual = 0
 
         t = str(time())
@@ -51,8 +51,10 @@ class FlipWallter:
             for transacao in bloco['transacoes']:
                 if transacao['destinatario'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel += float(transacao['quantia'])
+                    self.usuario.transacoes[bloco['timestamp']] = transacao
                 if transacao['remetente'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel -= float(transacao['quantia'])
+                    self.usuario.transacoes[bloco['timestamp']] = transacao
     
     def atualizarSaldoPendente(self):
         for transacao in self.blockchain.transacoes_atuais:
@@ -62,10 +64,10 @@ class FlipWallter:
                 self.usuario.saldo_pendente -= transacao['quantia']
     
     def atualizar_saldos(self, lblSaldoDisponivel, lblSaldoPendente, lblSaldoTotal):
+        self.sincronizar()
         lblSaldoDisponivel['text'] = "$FC " + str(self.usuario.saldo_disponivel)
         lblSaldoPendente['text'] = "$FC " + str(self.usuario.saldo_pendente)
         lblSaldoTotal['text'] = "$FC " + str(self.usuario.saldo_disponivel + self.usuario.saldo_pendente) 
-
 
     def janelaNovoHash(self):
         hash_window = Tk()
@@ -110,8 +112,10 @@ class FlipWallter:
         print(resposta.text)
 
     def minerar(self):
-        endereco = { "endereco" : self.usuario.etiquetas['meuEndereco'] }
-        resposta = requests.get('http://localhost:5000/mine', params=endereco)
+        endereco = { 'endereco' : self.usuario.etiquetas['meuEndereco'] }
+        resposta = requests.post('http://localhost:5000/mine', params=endereco)
+        print(resposta.text)
+        messagebox.showinfo("Recompesa", "Você ganhou 1 $FC")
 
     def enviar(self, destinatarioE, etiquetaE, quantiaE):
         destinatario = None
@@ -168,15 +172,12 @@ class FlipWallter:
 
         lista_transacoes.insert(END, "DATA           REMETENTE             DESTINATÁRIO         QUANTIA")
 
-        """for transacao in self.usuario.:
-            data = bloco['timestamp']
-            transacoes = bloco.get('transacoes')
-            remetente = transacoes[1]
-            destinatario = bloco['transacoes']['destinatario']
-            quantia = bloco['transacoes']['quantia']
-            string = data + " " + remetente + " " + destinatario + " " + quantia
-        
-            lista_transacoes.insert(END, )
+        for key in self.usuario.transacoes:
+            data = key
+            remetente = self.usuario.transacoes[key]['remetente']
+            destinatario = self.usuario.transacoes[key]['destinatario']
+            quantia = self.usuario.transacoes[key]['quantia']
+            lista_transacoes.insert(END, remetente + " " + destinatario + " " + quantia)
 
         lista_transacoes.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=lista_transacoes.yview)
@@ -184,8 +185,7 @@ class FlipWallter:
         janelaHistorico.resizable(0,0)
         janelaHistorico.geometry("600x450+200+100")
         janelaHistorico.mainloop()
-        """
-        ################################################################# Interface ###################################################################
+        
     def inicializarJanela(self): 
         saldo = Label(self.janela, text="Saldos")
         saldo.place(x = 10, y = 20)
@@ -259,6 +259,15 @@ class FlipWallter:
         btngerar_hash['command'] = partial(self.janelaNovoHash)
         btngerar_hash.place(x = 463, y = 410)
 
+        btnminerar = Button(self.janela, text='Minerar')
+        btnminerar['command'] = partial(self.minerar)
+        btnminerar.place(x = 95, y = 410)
+
+        """
+        btnmeus_enderecos = Button(self.janela, text="Meus endereços")
+        btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos())
+        btnmeus_enderecos.place
+        """
         self.janela.title("FlipWallet")
         self.janela.geometry("600x450+200+100")
         self.janela.resizable(0,0)  

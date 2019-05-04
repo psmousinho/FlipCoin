@@ -140,9 +140,9 @@ node_identifier = str(uuid4()).replace('-', '')
 
 blockchain = Blockchain()
 
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
-    no = request.form('endereco')
+    no = request.form['endereco']
 
     ult_bloco = blockchain.ultimo_bloco
     ult_prova = ult_bloco['prova']
