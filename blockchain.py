@@ -142,12 +142,12 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['POST'])
 def mine():
-    no = request.form['endereco']
-
+    no = request.args.get('endereco')
+    
     ult_bloco = blockchain.ultimo_bloco
     ult_prova = ult_bloco['prova']
     prova = blockchain.prova_trabalho(ult_prova)
-
+    
     blockchain.nova_transacao(
         remetente = "0",
         destinatario = no,
