@@ -17,7 +17,7 @@ class User:
         self.contatos = {}
         self.saldo_disponivel = 0
         self.saldo_pendente = 0
-        self.transacoes = {}
+        self.transacoes_validadas = {}
         self.index_atual = 0
 
         t = str(time())
@@ -44,6 +44,7 @@ class FlipWallter:
         r = r.json()
         self.blockchain.cadeia = r['cadeia']
         self.blockchain.transacoes_atuais = r['transacoes_atuais']
+        print("Quantidade de transações pendentes: " + str(len(self.blockchain.transacoes_atuais)))
         
     def atualizarSaldoDisponivel(self):
         index = self.usuario.index_atual
@@ -53,27 +54,27 @@ class FlipWallter:
             for transacao in bloco['transacoes']:
                 if transacao['destinatario'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel += float(transacao['quantia'])
-                    self.usuario.transacoes[bloco['timestamp']] = transacao
+                    self.usuario.transacoes_validadas[bloco['timestamp']] = transacao
                 if transacao['remetente'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel -= float(transacao['quantia'])
-                    self.usuario.transacoes[bloco['timestamp']] = transacao
+                    self.usuario.transacoes_validadas[bloco['timestamp']] = transacao
             index += 1
 
         self.usuario.index_atual = index
     
     def atualizarSaldoPendente(self):
+        self.usuario.saldo_pendente = 0
         for transacao in self.blockchain.transacoes_atuais:
-            if transacao['destinatario'] == self.usuario.etiquetas.values():
-                self.usuario.saldo_pendente += transacao['quantia']
-            if transacao['remetente'] == self.usuario.etiquetas.values():
-                self.usuario.saldo_pendente -= transacao['quantia']
+            if transacao['destinatario'] in self.usuario.etiquetas.values():
+                self.usuario.saldo_pendente += float(transacao['quantia'])
+            if transacao['remetente'] in self.usuario.etiquetas.values():
+                self.usuario.saldo_pendente -= float(transacao['quantia'])
+
     
     def atualizar_saldos(self, lblSaldoDisponivel, lblSaldoPendente, lblSaldoTotal):
         self.sincronizar()
         self.atualizarSaldoDisponivel()
         self.atualizarSaldoPendente()
-        for key in self.usuario.transacoes.keys():
-            print(self.usuario.transacoes[key])
 
         lblSaldoDisponivel['text'] = "$FC " + str(self.usuario.saldo_disponivel)
         lblSaldoPendente['text'] = "$FC " + str(self.usuario.saldo_pendente)
@@ -170,8 +171,8 @@ class FlipWallter:
         }
         resposta = requests.post('http://localhost:5000/transaction/new', params=transacao)
         resposta = resposta.json()
-        if resposta['menssagem'] != 'Deu errado':
-            self.usuario.transacoes.append(transacao)
+        #if resposta['mensagem'] != 'Deu errado':
+         #   self.usuario.transacoes_validadas.append(transacao)
 
     def janelaHistorico(self):
         janelaHistorico = Tk()
@@ -183,17 +184,17 @@ class FlipWallter:
         lista_transacoes = Listbox(janelaHistorico, width=73, height=30)
         lista_transacoes.place(x = 0, y = 0)
 
-        for key in self.usuario.transacoes:
+        for key in self.usuario.transacoes_validadas:
             data = date.isoformat(date.fromtimestamp(key))
             lista_transacoes.insert(END, " DATA: " + data)
 
-            remetente = self.usuario.transacoes[key]['remetente']
+            remetente = self.usuario.transacoes_validadas[key]['remetente']
             lista_transacoes.insert(END, " REMETENTE: " + remetente)
             
-            destinatario = self.usuario.transacoes[key]['destinatario']
+            destinatario = self.usuario.transacoes_validadas[key]['destinatario']
             lista_transacoes.insert(END, " DESTINATÁRIO: " + destinatario)
 
-            quantia = str(self.usuario.transacoes[key]['quantia'])
+            quantia = str(self.usuario.transacoes_validadas[key]['quantia'])
             lista_transacoes.insert(END, " QUANTIA: " + quantia)
 
             lista_transacoes.insert(END, "\n")
@@ -315,7 +316,7 @@ class FlipWallter:
         pickle.dump(self.blockchain,open('blockchain.pkl','wb'))
         pickle.dump(self.usuario,open('user.pkl','wb'))
 
-######################deserializacao#########################
+###################### Desserialização #########################
 try:
     bc = pickle.load(open('blockchain.pkl','rb'))
     user = pickle.load(open('user.pkl','rb'))

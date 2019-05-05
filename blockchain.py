@@ -168,15 +168,15 @@ def mine():
 @app.route('/transaction/new', methods=['POST'])
 def nova_transacao():
     try:
-        remetente = request.form['remetente']
-        destinatario = request.form['destinatario']
-        quantia = request.form['quantia']
+        remetente = request.args.get('remetente')
+        destinatario = request.args.get('destinatario')
+        quantia = request.args.get('quantia')
         index = blockchain.nova_transacao(remetente, destinatario, quantia)
-        resposta = {'messagem' : f'A transacao sera adicionada ao bloco {index}'}
-    
+        print(len(blockchain.transacoes_atuais))
+        resposta = {'mensagem' : f'A transacao sera adicionada ao bloco {index}'}
     except KeyError:
-        resposta = {'menssagem' : 'Deu errado'}
-    
+        resposta = {'mensagem' : 'Deu errado'}
+            
     #if not all(k in valores for k in requerido):
     #    return 'Faltando valores', 40
     
