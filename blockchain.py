@@ -175,7 +175,7 @@ def nova_transacao():
         resposta = {'messagem' : f'A transacao sera adicionada ao bloco {index}'}
     
     except KeyError:
-        resposta = {'messagem' : 'Deu errado'}
+        resposta = {'menssagem' : 'Deu errado'}
     
     #if not all(k in valores for k in requerido):
     #    return 'Faltando valores', 40

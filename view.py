@@ -72,6 +72,9 @@ class FlipWallter:
         self.sincronizar()
         self.atualizarSaldoDisponivel()
         self.atualizarSaldoPendente()
+        for key in self.usuario.transacoes.keys():
+            print(self.usuario.transacoes[key])
+
         lblSaldoDisponivel['text'] = "$FC " + str(self.usuario.saldo_disponivel)
         lblSaldoPendente['text'] = "$FC " + str(self.usuario.saldo_pendente)
         lblSaldoTotal['text'] = "$FC " + str(self.usuario.saldo_disponivel + self.usuario.saldo_pendente) 
@@ -103,12 +106,12 @@ class FlipWallter:
         hash_window.geometry("625x100+200+100")
         hash_window.mainloop()
 
-    def adicionarNovoHash(self, hash_window,etiqueta, hash):
+    def adicionarNovoHash(self, hash_window, etiqueta, hash):
         if etiqueta.get() == '':
             messagebox.showerror("Erro", "A etiqueta está vazia!")
             hash_window.lift()
         else:
-            self.usuario.etiquetas[etiqueta] = hash
+            self.usuario.etiquetas[etiqueta.get()] = hash
             hash_window.destroy()
     
     def registrar(self):
@@ -166,7 +169,8 @@ class FlipWallter:
                 'quantia' : quantia
         }
         resposta = requests.post('http://localhost:5000/transaction/new', params=transacao)
-        if resposta['mensagem'] != 'Deu errado':
+        resposta = resposta.json()
+        if resposta['menssagem'] != 'Deu errado':
             self.usuario.transacoes.append(transacao)
 
     def janelaHistorico(self):
@@ -214,8 +218,8 @@ class FlipWallter:
         for key in self.usuario.etiquetas:
             enderecos.insert(END, key + ": " + self.usuario.etiquetas[key])
 
-        janela_meus_end.config(yscrollcommand=yscrollbar.set)
-        yscrollbar.config(command=janela_meus_end.yview)
+        enderecos.config(yscrollcommand=yscrollbar.set)
+        yscrollbar.config(command=enderecos.yview)
 
         janela_meus_end.resizable(0,0)
         janela_meus_end.geometry("601x450+200+100")
@@ -299,7 +303,7 @@ class FlipWallter:
         btnminerar.place(x = 95, y = 410)
 
         btnmeus_enderecos = Button(self.janela, text="Meus endereços")
-        #btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos())
+        btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos)
         btnmeus_enderecos.place(x = 341, y = 410)
 
         self.janela.title("FlipWallet")
