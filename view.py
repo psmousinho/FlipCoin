@@ -9,6 +9,7 @@ import requests
 import pickle
 import hashlib
 import socket
+import pickle
 
 class User:
     def __init__(self):
@@ -110,8 +111,6 @@ class FlipWallter:
             self.usuario.etiquetas[etiqueta] = hash
             hash_window.destroy()
     
-    #def adicionarNovoHash(etiqueta, hash):
-    #    self.minhas_etiquetas[etiqueta] = hash
     def registrar(self):
         nos = {
             'nos' : ['http://localhost:5000/']
@@ -222,7 +221,6 @@ class FlipWallter:
         janela_meus_end.geometry("601x450+200+100")
         janela_meus_end.mainloop()
 
-
     def inicializarJanela(self): 
         saldo = Label(self.janela, text="Saldos")
         saldo.place(x = 10, y = 20)
@@ -301,7 +299,7 @@ class FlipWallter:
         btnminerar.place(x = 95, y = 410)
 
         btnmeus_enderecos = Button(self.janela, text="Meus endereços")
-        btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos())
+        #btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos())
         btnmeus_enderecos.place(x = 341, y = 410)
 
         self.janela.title("FlipWallet")
@@ -309,4 +307,14 @@ class FlipWallter:
         self.janela.resizable(0,0)  
         self.janela.mainloop()
 
-FlipWallter()
+    def serializar(self):
+        pickle.dump(self.blockchain,open('blockchain.pkl','wb'))
+        pickle.dump(self.usuario,open('user.pkl','wb'))
+
+######################deserializacao#########################
+try:
+    bc = pickle.load(open('blockchain.pkl','rb'))
+    user = pickle.load(open('user.pkl','rb'))
+    FlipWallter(user,bc)
+except FileNotFoundError:
+    FlipWallter()
