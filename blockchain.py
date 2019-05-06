@@ -35,7 +35,7 @@ class Blockchain(object):
             'prova' : prova,
             'hash_ant' : hash_ant or self.hash(self.cadeia[-1])
         }
-        print(bloco['index'])
+        
         self.transacoes_atuais = []
         self.cadeia.append(bloco)
         return bloco
@@ -184,6 +184,7 @@ def nova_transacao():
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
+    print(len(blockchain.cadeia))
     response = {
         'cadeia' : blockchain.cadeia,
         'transacoes_atuais' : blockchain.transacoes_atuais

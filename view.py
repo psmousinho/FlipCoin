@@ -17,7 +17,7 @@ class User:
         self.contatos = {}
         self.saldo_disponivel = 0
         self.saldo_pendente = 0
-        self.transacoes_validadas = {}
+        self.transacoes = {}
         self.index_atual = 0
 
         t = str(time())
@@ -44,20 +44,19 @@ class FlipWallter:
         r = r.json()
         self.blockchain.cadeia = r['cadeia']
         self.blockchain.transacoes_atuais = r['transacoes_atuais']
-        print("Quantidade de transações pendentes: " + str(len(self.blockchain.transacoes_atuais)))
         
     def atualizarSaldoDisponivel(self):
         index = self.usuario.index_atual
-        
         while index < len(self.blockchain.cadeia):
             bloco = self.blockchain.cadeia[index]
+            self.usuario.transacoes[bloco['timestamp']] = []
             for transacao in bloco['transacoes']:
                 if transacao['destinatario'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel += float(transacao['quantia'])
-                    self.usuario.transacoes_validadas[bloco['timestamp']] = transacao
+                    self.usuario.transacoes[bloco['timestamp']].append(transacao)
                 if transacao['remetente'] in self.usuario.etiquetas.values():
                     self.usuario.saldo_disponivel -= float(transacao['quantia'])
-                    self.usuario.transacoes_validadas[bloco['timestamp']] = transacao
+                    self.usuario.transacoes[bloco['timestamp']].append(transacao)
             index += 1
 
         self.usuario.index_atual = index
@@ -128,9 +127,9 @@ class FlipWallter:
         resposta = requests.post('http://localhost:5000/mine', params=endereco)
         resposta = resposta.json()
         if resposta['message'] == 'Novo bloco forjado':
-            messagebox.showinfo("Recompesa", "Você ganhou 1 $FC")
+            messagebox.showinfo("Recompesa", "Você ganhou 1 $FC!")
 
-    def enviar(self, destinatarioE, etiquetaE, quantiaE):
+    def enviar(self, destinatarioE, etiquetaE, quantiaE, comissaoE):
         destinatario = None
 
         if etiquetaE.get() != '':
@@ -164,15 +163,23 @@ class FlipWallter:
 
         remetente = self.usuario.etiquetas['meuEndereco']
         quantia = float(quantiaE.get())
+        comissao = 0.0 if comissaoE.get() == "" else float(comissaoE.get())
+        
+        if quantia+comissao > self.usuario.saldo_disponivel:
+            messagebox.showinfo("Saldo insuficiente", "Você não possui saldo suficiente!")
+            return
+
         transacao = {
                 'remetente' : remetente,
                 'destinatario' : destinatario,
                 'quantia' : quantia
         }
+        
         resposta = requests.post('http://localhost:5000/transaction/new', params=transacao)
         resposta = resposta.json()
+        
         #if resposta['mensagem'] != 'Deu errado':
-         #   self.usuario.transacoes_validadas.append(transacao)
+        #    self.usuario.transacoes.append(transacao)
 
     def janelaHistorico(self):
         janelaHistorico = Tk()
@@ -184,20 +191,21 @@ class FlipWallter:
         lista_transacoes = Listbox(janelaHistorico, width=73, height=30)
         lista_transacoes.place(x = 0, y = 0)
 
-        for key in self.usuario.transacoes_validadas:
-            data = date.isoformat(date.fromtimestamp(key))
-            lista_transacoes.insert(END, " DATA: " + data)
+        for key in self.usuario.transacoes:
+            for transacao in self.usuario.transacoes[key]:
+                data = date.isoformat(date.fromtimestamp(key))
+                lista_transacoes.insert(END, " DATA: " + data)
 
-            remetente = self.usuario.transacoes_validadas[key]['remetente']
-            lista_transacoes.insert(END, " REMETENTE: " + remetente)
-            
-            destinatario = self.usuario.transacoes_validadas[key]['destinatario']
-            lista_transacoes.insert(END, " DESTINATÁRIO: " + destinatario)
+                remetente = transacao['remetente']
+                lista_transacoes.insert(END, " REMETENTE: " + remetente)
+                
+                destinatario = transacao['destinatario']
+                lista_transacoes.insert(END, " DESTINATÁRIO: " + destinatario)
 
-            quantia = str(self.usuario.transacoes_validadas[key]['quantia'])
-            lista_transacoes.insert(END, " QUANTIA: " + quantia)
+                quantia = str(transacao['quantia'])
+                lista_transacoes.insert(END, " QUANTIA: " + quantia)
 
-            lista_transacoes.insert(END, "\n")
+                lista_transacoes.insert(END, "\n")
 
         lista_transacoes.config(yscrollcommand=yscrollbar.set)
         yscrollbar.config(command=lista_transacoes.yview)
@@ -285,7 +293,7 @@ class FlipWallter:
         comissaoE.place(x = 160, y = 320)
 
         btnenviar = Button(self.janela, width=3, text="Enviar")
-        btnenviar['command'] = partial(self.enviar,destinatarioE, etiquetaE, quantiaE)
+        btnenviar['command'] = partial(self.enviar,destinatarioE, etiquetaE, quantiaE, comissaoE)
         btnenviar.place(x = 537, y = 350)
 
         line2 = Label(self.janela, text="------------------------------------------------------------------------------------------------------------------------------------------------")
