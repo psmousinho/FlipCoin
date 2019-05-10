@@ -24,10 +24,8 @@ class User:
         t = t.encode('utf-8')
         self.etiquetas['meuEndereco'] = hashlib.sha256(t).hexdigest()
 
-
-class FlipWallter:
+class FlipWallet:
     def __init__(self, user=None, blockchain=None):
-        self.janela = Tk()
         self.usuario = user or User()
         self.blockchain = blockchain or Blockchain()
         
@@ -128,6 +126,8 @@ class FlipWallter:
         resposta = resposta.json()
         if resposta['message'] == 'Novo bloco forjado':
             messagebox.showinfo("Recompesa", "Você ganhou 1 $FC!")
+        
+        
 
     def enviar(self, destinatarioE, etiquetaE, quantiaE, comissaoE):
         destinatario = None
@@ -177,9 +177,7 @@ class FlipWallter:
         
         resposta = requests.post('http://localhost:5000/transaction/new', params=transacao)
         resposta = resposta.json()
-        
-        #if resposta['mensagem'] != 'Deu errado':
-        #    self.usuario.transacoes.append(transacao)
+       
 
     def janelaHistorico(self):
         janelaHistorico = Tk()
@@ -234,7 +232,34 @@ class FlipWallter:
         janela_meus_end.geometry("601x450+200+100")
         janela_meus_end.mainloop()
 
+    def janelaMeusContatos(self):
+        janela_meus_cont = Tk()
+        janela_meus_cont.title("Meus Contatos")
+
+        yscrollbar = Scrollbar(janela_meus_cont)
+        yscrollbar.pack(side = RIGHT, fill = Y)
+
+        contatos = Listbox(janela_meus_cont, width=73, height=30)
+        contatos.place(x = 0, y = 0)
+
+        for key in self.usuario.contatos:
+            contatos.insert(END, key + ": " + self.usuario.contatos[key])
+
+        contatos.config(yscrollcommand=yscrollbar.set)
+        yscrollbar.config(command=contatos.yview)
+
+        janela_meus_cont.resizable(0,0)
+        janela_meus_cont.geometry("601x450+200+100")
+        janela_meus_cont.mainloop()
+
+    def serializar(self):
+        print("serializando")
+        pickle.dump(self.blockchain,open('blockchain.pkl','wb'))
+        pickle.dump(self.usuario,open('user.pkl','wb'))
+        self.janela.destroy()
+
     def inicializarJanela(self): 
+        self.janela = Tk()
         saldo = Label(self.janela, text="Saldos")
         saldo.place(x = 10, y = 20)
 
@@ -315,19 +340,23 @@ class FlipWallter:
         btnmeus_enderecos['command'] = partial(self.janelaMeusEnderecos)
         btnmeus_enderecos.place(x = 341, y = 410)
 
+        btnmeus_contatos = Button(self.janela, text="Meus contatos")
+        btnmeus_contatos['command'] = partial(self.janelaMeusContatos)
+        btnmeus_contatos.place(x = 222, y = 410)
+
         self.janela.title("FlipWallet")
         self.janela.geometry("600x450+200+100")
-        self.janela.resizable(0,0)  
-        self.janela.mainloop()
+        self.janela.resizable(0,0)
 
-    def serializar(self):
-        pickle.dump(self.blockchain,open('blockchain.pkl','wb'))
-        pickle.dump(self.usuario,open('user.pkl','wb'))
+        self.janela.protocol("WM_DELETE_WINDOW", self.serializar)
+
+        self.janela.mainloop()
 
 ###################### Desserialização #########################
 try:
     bc = pickle.load(open('blockchain.pkl','rb'))
     user = pickle.load(open('user.pkl','rb'))
-    FlipWallter(user,bc)
+    print(user.etiquetas['meuEndereco'])
+    FlipWallet(user,bc)
 except FileNotFoundError:
-    FlipWallter()
+    f = FlipWallet()

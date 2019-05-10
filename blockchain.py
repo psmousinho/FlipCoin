@@ -172,13 +172,9 @@ def nova_transacao():
         destinatario = request.args.get('destinatario')
         quantia = request.args.get('quantia')
         index = blockchain.nova_transacao(remetente, destinatario, quantia)
-        print(len(blockchain.transacoes_atuais))
         resposta = {'mensagem' : f'A transacao sera adicionada ao bloco {index}'}
     except KeyError:
         resposta = {'mensagem' : 'Deu errado'}
-            
-    #if not all(k in valores for k in requerido):
-    #    return 'Faltando valores', 40
     
     return jsonify(resposta), 201
 
